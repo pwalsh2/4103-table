@@ -4,13 +4,16 @@ import {
   useTable,
   useFilters,
   useGlobalFilter,
+  useSortBy,
   useAsyncDebounce
 } from "react-table";
 // A great library for fuzzy filtering/sorting items
 import {matchSorter} from "match-sorter";
 import "./App.css";
-import makeData from "./makeData";
-
+import {makeData,makeTranscript} from "./makeData";
+import {Button} from 'react-bootstrap'
+import {Modal} from 'react-bootstrap'
+import "bootstrap/dist/css/bootstrap.min.css";
 // Define a default UI for filtering
 function DefaultColumnFilter({
   column: { filterValue, preFilteredRows, setFilter }
@@ -18,7 +21,7 @@ function DefaultColumnFilter({
   const count = preFilteredRows.length;
 
   return (
-    <input
+    <input  
       value={filterValue || ""}
       onChange={(e) => {
         setFilter(e.target.value || undefined); // Set undefined to remove the filter entirely
@@ -128,7 +131,20 @@ function fuzzyTextFilterFn(rows, id, filterValue) {
 fuzzyTextFilterFn.autoRemove = (val) => !val;
 
 // Our table component
-function Table({ columns, data }) {
+function Table({ columns, data, modalClose, modalOpen, modalState,selectKey }) {
+  
+  
+  function enterAdvanced(row){ 
+    const key = 
+    row.cells.map((cell) => {
+     if(cell.column.id === 'student_number') {
+       return cell.value
+     }
+    })
+    modalOpen()
+    selectKey(key)
+    console.log(key)
+  }
   const filterTypes = React.useMemo(
     () => ({
       // Add a new fuzzyTextFilterFn filter type.
@@ -173,7 +189,8 @@ function Table({ columns, data }) {
       filterTypes
     },
     useFilters, // useFilters!
-    useGlobalFilter // useGlobalFilter!
+    useGlobalFilter,
+    useSortBy // useGlobalFilter!
   );
 
   // We don't want to render all of the rows for this example, so cap
@@ -182,15 +199,23 @@ function Table({ columns, data }) {
 
   return (
     <>
+    
       <table className="styled-table" {...getTableProps()}>
         <thead>
           {headerGroups.map((headerGroup) => (
             <tr {...headerGroup.getHeaderGroupProps()}>
               {headerGroup.headers.map((column) => (
-                <th {...column.getHeaderProps()}>
+                <th {...column.getHeaderProps(column.getSortByToggleProps())}>
                   {column.render("Header")}
                   {/* Render the columns filter UI */}
-                  <div>{column.canFilter ? column.render("Filter") : null} </div>
+                  <div>{column.canFilter ? column.render("Filter") : null}
+                  <span>{column.isSorted
+													? column.isSortedDesc
+														? "🔽"
+														: "🔼"
+													: ""}  </span>
+
+                  </div>
                  
                 </th>
               ))}
@@ -204,7 +229,7 @@ function Table({ columns, data }) {
           {firstPageRows.map((row, i) => {
             prepareRow(row);
             return (
-              <tr {...row.getRowProps()}>
+              <tr onClick={() => enterAdvanced(row)} {...row.getRowProps()}>
                 {row.cells.map((cell) => {
                   return (
                     <td className = "table-td-cell" {...cell.getCellProps()}>{cell.render("Cell")}</td>
@@ -242,11 +267,22 @@ filterGreaterThan.autoRemove = (val) => typeof val !== "number";
 
 function App() {
   const [data, setData] = React.useState([]);
+  const [TranscriptData, setTranscriptData] = React.useState([]);
+  const [modalShow, setModalShow] = React.useState(false);
+  const [advancedKey, advancedKeySet] = React.useState([]);
+  const handleClose = () => setModalShow(false);
+	const handleShow = () => setModalShow(true);
   React.useEffect(() => {
     (async () => {
       await makeData(setData)
     })();
   }, []);
+
+  React.useEffect(() => {
+    (async () => {
+      await makeTranscript(advancedKey,setTranscriptData)
+    })();
+  }, [advancedKey]);
   const columns = React.useMemo(
     () => [
       {
@@ -254,7 +290,8 @@ function App() {
         columns: [
           {
             Header: "Student ID",
-            accessor: "student_number"
+            accessor: "student_number",
+
           },
           {
             Header: "Name",
@@ -274,16 +311,95 @@ function App() {
             Header: "Rank",
             accessor: "rank",
             Filter: SelectColumnFilter,
+            
           }
         ]
       }
     ],
     []
   );
+  
+  const columnsTranscripts = React.useMemo(
+    () => [
+      {
+        Header: " ",
+        columns: [
+          {
+            Header: "Course Code",
+            accessor: "student_number",
 
+          },
+          {
+            Header: "Course",
+            accessor: "name"
+          },
+          {
+            Header: "Semester",
+            accessor: "program"
+          },
+          {
+            Header: "Section",
+            accessor: "campus",
+            Filter: SelectColumnFilter,
+            filter: "includes"
+          },
+          {
+            Header: "Credit Hours",
+            accessor: "rank",
+            Filter: SelectColumnFilter,
+            
+          }
+        ]
+      }
+    ],
+    []
+  );
   
 
-  return <Table columns={columns} data={data} />;
+  return <>
+ <Modal show={modalShow} onHide={handleClose}
+ aria-labelledby="example-modal-sizes-title-lg"
+ size='xl'>
+        <Modal.Header closeButton>
+          <Modal.Title>Advanced Transcript</Modal.Title>
+        </Modal.Header>
+        <Modal.Body >
+            <div className="row_modal">
+              <div className="column_modal" >
+              <Table
+            columns={columnsTranscripts} data={[]} 
+
+          >
+
+        
+
+          </Table>
+        </div>
+          <div className="column_modal">
+          <h1>Student Name</h1>
+          <h2>Student ID</h2>
+         
+          </div>
+        </div>
+
+         
+         </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleClose}>
+            Close
+          </Button>
+         
+        </Modal.Footer>
+      </Modal>
+  <Table columns={columns} data={data} 
+    modalClose = {handleClose}
+    modalOpen = {handleShow}
+    modalState = {modalShow}
+    selectKey = {advancedKeySet}
+ 
+  />
+  
+  </>;
 }
 
 export default App;

@@ -1,5 +1,5 @@
 .styled-table {
-  display:block;
+  display: inline-block;
  
   border-collapse: collapse;
   font-size: 0.9em;
@@ -17,13 +17,13 @@
 .styled-table th,
 .styled-table td {
   text-align: center;
-  width: 140px;
+  width: 160px;
   padding: 12px 15px;
 }
 
 
 .styled-table tbody {
-  width: 855px;
+  width: 830px;
   display: inline-block;
 
   
@@ -48,4 +48,18 @@
 }
 input {
  width:130px;
+}
+
+
+
+
+
+
+.row_modal {
+
+  display: inline-flex; ;
+}
+
+.column_modal {
+  padding: 1rem;
 }
