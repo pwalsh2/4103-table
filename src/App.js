@@ -131,132 +131,146 @@ function fuzzyTextFilterFn(rows, id, filterValue) {
 fuzzyTextFilterFn.autoRemove = (val) => !val;
 
 // Our table component
-function Table({ columns, data, modalClose, modalOpen, modalState,selectKey }) {
-  
-  
-  function enterAdvanced(row){ 
-    const key = 
-    row.cells.map((cell) => {
-     if(cell.column.id === 'student_number') {
-       return cell.value
-     }
-    })
-    modalOpen()
-    selectKey(key)
-    console.log(key)
-  }
-  const filterTypes = React.useMemo(
-    () => ({
-      // Add a new fuzzyTextFilterFn filter type.
-      fuzzyText: fuzzyTextFilterFn,
-      // Or, override the default text filter to use
-      // "startWith"
-      text: (rows, id, filterValue) => {
-        return rows.filter((row) => {
-          const rowValue = row.values[id];
-          return rowValue !== undefined
-            ? String(rowValue)
-                .toLowerCase()
-                .startsWith(String(filterValue).toLowerCase())
-            : true;
-        });
-      }
-    }),
-    []
-  );
+     
+function Table({
+	columns,
+	data,
+	modalClose,
+	modalOpen,
+	modalState,
+	selectKey,
+	selectName,
+}) {
+	function enterAdvanced(row) {
+		const key = row.cells.map((cell) => {
+			if (cell.column.id === "student_number") {
+				return cell.value;
+			}
+		});
+		const name = row.cells.map((cell) => {
+			if (cell.column.id === "name") {
+				return cell.value;
+			}
+		});
+		modalOpen();
+		selectName(name);
+		selectKey(key);
+		console.log(key);
+	}
+	const filterTypes = React.useMemo(
+		() => ({
+			// Add a new fuzzyTextFilterFn filter type.
+			fuzzyText: fuzzyTextFilterFn,
+			// Or, override the default text filter to use
+			// "startWith"
+			text: (rows, id, filterValue) => {
+				return rows.filter((row) => {
+					const rowValue = row.values[id];
+					return rowValue !== undefined
+						? String(rowValue)
+								.toLowerCase()
+								.startsWith(String(filterValue).toLowerCase())
+						: true;
+				});
+			},
+		}),
+		[]
+	);
 
-  const defaultColumn = React.useMemo(
-    () => ({
-      // Let's set up our default Filter UI
-      Filter: DefaultColumnFilter
-    }),
-    []
-  );
+	const defaultColumn = React.useMemo(
+		() => ({
+			// Let's set up our default Filter UI
+			Filter: DefaultColumnFilter,
+		}),
+		[]
+	);
 
-  const {
-    getTableProps,
-    getTableBodyProps,
-    headerGroups,
-    rows,
-    prepareRow,
-    state,
-    visibleColumns
-  } = useTable(
-    {
-      columns,
-      data,
-      defaultColumn, // Be sure to pass the defaultColumn option
-      filterTypes
-    },
-    useFilters, // useFilters!
-    useGlobalFilter,
-    useSortBy // useGlobalFilter!
-  );
+	const {
+		getTableProps,
+		getTableBodyProps,
+		headerGroups,
+		rows,
+		prepareRow,
+		state,
+		visibleColumns,
+	} = useTable(
+		{
+			columns,
+			data,
+			defaultColumn, // Be sure to pass the defaultColumn option
+			filterTypes,
+		},
+		useFilters, // useFilters!
+		useGlobalFilter,
+		useSortBy // useGlobalFilter!
+	);
 
-  // We don't want to render all of the rows for this example, so cap
-  // it for this use case
-  const firstPageRows = rows
+	// We don't want to render all of the rows for this example, so cap
+	// it for this use case
+	const firstPageRows = rows;
 
-  return (
-    <>
-    
-      <table className="styled-table" {...getTableProps()}>
-        <thead>
-          {headerGroups.map((headerGroup) => (
-            <tr {...headerGroup.getHeaderGroupProps()}>
-              {headerGroup.headers.map((column) => (
-                <th {...column.getHeaderProps(column.getSortByToggleProps())}>
-                  {column.render("Header")}
-                  {/* Render the columns filter UI */}
-                  <div>{column.canFilter ? column.render("Filter") : null}
-                  <span>{column.isSorted
-													? column.isSortedDesc
-														? "🔽"
-														: "🔼"
-													: ""}  </span>
+	return (
+		<>
+			<table className='styled-table' {...getTableProps()}>
+				<thead>
+					{headerGroups.map((headerGroup) => (
+						<tr {...headerGroup.getHeaderGroupProps()}>
+							{headerGroup.headers.map((column) => (
+								<th {...column.getHeaderProps(column.getSortByToggleProps())}>
+									{column.render("Header")}
+									{/* Render the columns filter UI */}
+									<div>
+										{column.canFilter ? column.render("Filter") : null}
+										<span>
+											{column.isSorted
+												? column.isSortedDesc
+													? "🔽"
+													: "🔼"
+												: ""}{" "}
+										</span>
+									</div>
+								</th>
+							))}
+						</tr>
+					))}
+					<tr>
+						<th colSpan={visibleColumns.length}></th>
+					</tr>
+				</thead>
+				<tbody {...getTableBodyProps()}>
+					{firstPageRows.map((row, i) => {
+						prepareRow(row);
+						return (
+							<tr onClick={() => enterAdvanced(row)} {...row.getRowProps()}>
+								{row.cells.map((cell) => {
+									return (
+										<td className='table-td-cell' {...cell.getCellProps()}>
+											{cell.render("Cell")}
+										</td>
+									);
+								})}
+							</tr>
+						);
+					})}
+				</tbody>
+			</table>
+			<br />
 
-                  </div>
-                 
-                </th>
-              ))}
-            </tr>
-          ))}
-          <tr>
-            <th colSpan={visibleColumns.length}></th>
-          </tr>
-        </thead>
-        <tbody {...getTableBodyProps()}>
-          {firstPageRows.map((row, i) => {
-            prepareRow(row);
-            return (
-              <tr onClick={() => enterAdvanced(row)} {...row.getRowProps()}>
-                {row.cells.map((cell) => {
-                  return (
-                    <td className = "table-td-cell" {...cell.getCellProps()}>{cell.render("Cell")}</td>
-                  );
-                })}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-      <br />
-      
-      <div>
-        <pre>
-          <code>{JSON.stringify(state.filters, null, 2)}</code>
-        </pre>
-      </div>
-    </>
-  );
+			<div>
+				<pre>
+					<code>{JSON.stringify(state.filters, null, 2)}</code>
+				</pre>
+			</div>
+		</>
+	);
 }
 
 // Define a custom filter filter function!
 function filterGreaterThan(rows, id, filterValue) {
-  return rows.filter((row) => {
-    const rowValue = row.values[id];
-    return rowValue >= filterValue;
-  });
+	return rows.filter((row) => {
+		const rowValue = row.values[id];
+		return rowValue >= filterValue;
+	});
 }
 
 // This is an autoRemove method on the filter function that
@@ -266,140 +280,131 @@ function filterGreaterThan(rows, id, filterValue) {
 filterGreaterThan.autoRemove = (val) => typeof val !== "number";
 
 function App() {
-  const [data, setData] = React.useState([]);
-  const [TranscriptData, setTranscriptData] = React.useState([]);
-  const [modalShow, setModalShow] = React.useState(false);
-  const [advancedKey, advancedKeySet] = React.useState([]);
-  const handleClose = () => setModalShow(false);
+	const [data, setData] = React.useState([]);
+	const [TranscriptData, setTranscriptData] = React.useState([]);
+	const [modalShow, setModalShow] = React.useState(false);
+	const [advancedKey, advancedKeySet] = React.useState([]);
+	const [transcriptName, setTranscriptName] = React.useState("");
+	const handleClose = () => setModalShow(false);
 	const handleShow = () => setModalShow(true);
-  React.useEffect(() => {
-    (async () => {
-      await makeData(setData)
-    })();
-  }, []);
+	React.useEffect(() => {
+		(async () => {
+			await makeData(setData);
+		})();
+	}, []);
 
-  React.useEffect(() => {
-    (async () => {
-      await makeTranscript(advancedKey,setTranscriptData)
-    })();
-  }, [advancedKey]);
-  const columns = React.useMemo(
-    () => [
-      {
-        Header: " ",
-        columns: [
-          {
-            Header: "Student ID",
-            accessor: "student_number",
+	React.useEffect(() => {
+		(async () => {
+			await makeTranscript(advancedKey, setTranscriptData);
+		})();
+	}, [advancedKey]);
 
-          },
-          {
-            Header: "Name",
-            accessor: "name"
-          },
-          {
-            Header: "Program",
-            accessor: "program"
-          },
-          {
-            Header: "Campus",
-            accessor: "campus",
-            Filter: SelectColumnFilter,
-            filter: "includes"
-          },
-          {
-            Header: "Rank",
-            accessor: "rank",
-            Filter: SelectColumnFilter,
-            
-          }
-        ]
-      }
-    ],
-    []
-  );
-  
-  const columnsTranscripts = React.useMemo(
-    () => [
-      {
-        Header: " ",
-        columns: [
-          {
-            Header: "Course Code",
-            accessor: "student_number",
+	const columns = React.useMemo(
+		() => [
+			{
+				Header: " ",
+				columns: [
+					{
+						Header: "Student ID",
+						accessor: "student_number",
+					},
+					{
+						Header: "Name",
+						accessor: "name",
+					},
+					{
+						Header: "Program",
+						accessor: "program",
+					},
+					{
+						Header: "Campus",
+						accessor: "campus",
+						Filter: SelectColumnFilter,
+						filter: "includes",
+					},
+					{
+						Header: "Rank",
+						accessor: "rank",
+						Filter: SelectColumnFilter,
+					},
+				],
+			},
+		],
+		[]
+	);
 
-          },
-          {
-            Header: "Course",
-            accessor: "name"
-          },
-          {
-            Header: "Semester",
-            accessor: "program"
-          },
-          {
-            Header: "Section",
-            accessor: "campus",
-            Filter: SelectColumnFilter,
-            filter: "includes"
-          },
-          {
-            Header: "Credit Hours",
-            accessor: "rank",
-            Filter: SelectColumnFilter,
-            
-          }
-        ]
-      }
-    ],
-    []
-  );
-  
+	const columnsTranscripts = React.useMemo(
+		() => [
+			{
+				Header: " ",
+				columns: [
+					{
+						Header: "Course Code",
+						accessor: "Course_Code",
+					},
+					{
+						Header: "Course Name",
+						accessor: "Course_Name",
+					},
+					{
+						Header: "Semester",
+						accessor: "Semester",
+					},
+					{
+						Header: "Section",
+						accessor: "Section",
+						Filter: SelectColumnFilter,
+						filter: "includes",
+					},
+					{
+						Header: "Credit Hours",
+						accessor: "Credit_Hours",
+						Filter: SelectColumnFilter,
+					},
+				],
+			},
+		],
+		[]
+	);
 
-  return <>
- <Modal show={modalShow} onHide={handleClose}
- aria-labelledby="example-modal-sizes-title-lg"
- size='xl'>
-        <Modal.Header closeButton>
-          <Modal.Title>Advanced Transcript</Modal.Title>
-        </Modal.Header>
-        <Modal.Body >
-            <div className="row_modal">
-              <div className="column_modal" >
-              <Table
-            columns={columnsTranscripts} data={[]} 
-
-          >
-
-        
-
-          </Table>
-        </div>
-          <div className="column_modal">
-          <h1>Student Name</h1>
-          <h2>Student ID</h2>
-         
-          </div>
-        </div>
-
-         
-         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Close
-          </Button>
-         
-        </Modal.Footer>
-      </Modal>
-  <Table columns={columns} data={data} 
-    modalClose = {handleClose}
-    modalOpen = {handleShow}
-    modalState = {modalShow}
-    selectKey = {advancedKeySet}
- 
-  />
-  
-  </>;
+	return (
+		<>
+			<Modal
+				show={modalShow}
+				onHide={handleClose}
+				aria-labelledby='example-modal-sizes-title-lg'
+				size='xl'>
+				<Modal.Header closeButton>
+					<Modal.Title>Transcript</Modal.Title>
+				</Modal.Header>
+				<Modal.Body>
+					<div className='row_modal'>
+						<div className='column_modal'>
+							<Table columns={columnsTranscripts} data={TranscriptData}></Table>
+						</div>
+						<div className='column_modal'>
+							<h1>{transcriptName}</h1><br/>
+							<h2>{advancedKey}</h2>
+						</div>
+					</div>
+				</Modal.Body>
+				<Modal.Footer>
+					<Button variant='secondary' onClick={handleClose}>
+						Close
+					</Button>
+				</Modal.Footer>
+			</Modal>
+			<Table
+				columns={columns}
+				data={data}
+				modalClose={handleClose}
+				modalOpen={handleShow}
+				modalState={modalShow}
+				selectKey={advancedKeySet}
+				selectName={setTranscriptName}
+			/>
+		</>
+	);
 }
 
 export default App;
