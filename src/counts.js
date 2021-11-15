@@ -90,7 +90,7 @@ export default function Counts() {
         <Table hover size="sm">
           <thead>
             <tr>
-              <th>Enrolled For: {value.title}</th>
+              <th></th>
               <th>Count</th>
             </tr>
           </thead>
