@@ -7,11 +7,12 @@ import {
   useSortBy,
   useAsyncDebounce
 } from "react-table";
+import Counts from './counts'
 // A great library for fuzzy filtering/sorting items
 import {matchSorter} from "match-sorter";
 import "./App.css";
 import {makeData,makeTranscript} from "./makeData";
-import {Button} from 'react-bootstrap'
+import {Button, Table} from 'react-bootstrap'
 import {Modal} from 'react-bootstrap'
 import "bootstrap/dist/css/bootstrap.min.css";
 // Define a default UI for filtering
@@ -132,7 +133,7 @@ fuzzyTextFilterFn.autoRemove = (val) => !val;
 
 // Our table component
      
-function Table({
+function TableMasterList({
 	columns,
 	data,
 	modalClose,
@@ -264,7 +265,119 @@ function Table({
 		</>
 	);
 }
+function TableTranscript({
+	columns,
+	data,
+	modalClose,
+	modalOpen,
+	modalState,
+	selectKey,
+	selectName,
+}) {
+	
+	const filterTypes = React.useMemo(
+		() => ({
+			// Add a new fuzzyTextFilterFn filter type.
+			fuzzyText: fuzzyTextFilterFn,
+			// Or, override the default text filter to use
+			// "startWith"
+			text: (rows, id, filterValue) => {
+				return rows.filter((row) => {
+					const rowValue = row.values[id];
+					return rowValue !== undefined
+						? String(rowValue)
+								.toLowerCase()
+								.startsWith(String(filterValue).toLowerCase())
+						: true;
+				});
+			},
+		}),
+		[]
+	);
 
+
+
+	const {
+		getTableProps,
+		getTableBodyProps,
+		headerGroups,
+		rows,
+		prepareRow,
+		state,
+		visibleColumns,
+	} = useTable(
+		{
+			columns,
+			data,
+			 // Be sure to pass the defaultColumn option
+			filterTypes,
+		},
+		useFilters, // useFilters!
+		useGlobalFilter,
+		useSortBy // useGlobalFilter!
+	);
+
+	// We don't want to render all of the rows for this example, so cap
+	// it for this use case
+	const firstPageRows = rows;
+
+	return (
+		<>
+			<Table className='styled-transcript' {...getTableProps()}>
+				<thead className ='styled-transcript-thead'>
+					{headerGroups.map((headerGroup) => (
+						<tr {...headerGroup.getHeaderGroupProps()}>
+							{headerGroup.headers.map((column) => (
+								<th className= "transcript_head" {...column.getHeaderProps(column.getSortByToggleProps())}>
+									{column.render("Header")}
+									{/* Render the columns filter UI */}
+									<div>
+										{column.canFilter ? column.render("Filter") : null}
+										<span>
+											{column.isSorted
+												? column.isSortedDesc
+													? "🔽"
+													: "🔼"
+												: ""}{" "}
+										</span>
+									</div>
+								</th>
+							))}
+						</tr>
+					))}
+					<tr>
+						<th colSpan={visibleColumns.length}></th>
+					</tr>
+				</thead>
+				<tbody className ='styled-transcript-tbody' {...getTableBodyProps()}>
+					{firstPageRows.map((row, i) => {
+						prepareRow(row);
+						return (
+							<tr  {...row.getRowProps()}>
+								{row.cells.map((cell) => {
+									return (
+										<td className='transcript_cell' {...cell.getCellProps()}>
+											{cell.render("Cell")}
+										</td>
+									);
+								})}
+							</tr>
+              
+						);
+					})}
+        
+				</tbody>
+			</Table>
+			<br />
+
+			<div>
+				<pre>
+					<code>{JSON.stringify(state.filters, null, 2)}</code>
+				</pre>
+			</div>
+		</>
+	);
+}
 // Define a custom filter filter function!
 function filterGreaterThan(rows, id, filterValue) {
 	return rows.filter((row) => {
@@ -273,6 +386,27 @@ function filterGreaterThan(rows, id, filterValue) {
 	});
 }
 
+
+function compareCourseCode(rowA, rowB, id, desc) {
+  let arr_A = rowA.values[id]
+  arr_A = arr_A.split("*")
+  console.log(arr_A)
+  let arr_B = rowB.values[id]
+  
+  arr_B = arr_B.split("*")
+  console.log(arr_B)
+  let a = Number.parseFloat(arr_A[1]);
+  let b = Number.parseFloat(arr_B[1]);
+  if (Number.isNaN(a)) {  // Blanks and non-numeric strings to bottom
+      a = desc ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
+  }
+  if (Number.isNaN(b)) {
+      b = desc ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
+  }
+  if (a > b) return 1; 
+  if (a < b) return -1;
+  return 0;
+}
 // This is an autoRemove method on the filter function that
 // when given the new filter value and returns true, the filter
 // will be automatically removed. Normally this is just an undefined
@@ -341,26 +475,44 @@ function App() {
 					{
 						Header: "Course Code",
 						accessor: "Course_Code",
+            sortType: compareCourseCode, // custom function
+            disableFilters: true,
 					},
 					{
 						Header: "Course Name",
 						accessor: "Course_Name",
+            disableFilters: true,
+					},
+          {
+						Header: "Course Type",
+						accessor: "Course_Type",
+            disableFilters: true,
+						
 					},
 					{
 						Header: "Semester",
 						accessor: "Semester",
+            disableFilters: true,
 					},
 					{
 						Header: "Section",
 						accessor: "Section",
-						Filter: SelectColumnFilter,
 						filter: "includes",
+            disableFilters: true,
 					},
 					{
 						Header: "Credit Hours",
 						accessor: "Credit_Hours",
-						Filter: SelectColumnFilter,
+            disableFilters: true,
+						
 					},
+          {
+						Header: "Grade",
+						accessor: "Grade",
+            disableFilters: true,
+						
+					}
+         
 				],
 			},
 		],
@@ -369,6 +521,8 @@ function App() {
 
 	return (
 		<>
+		<div className='master-container'>
+			<div className = "div-table">
 			<Modal
 				show={modalShow}
 				onHide={handleClose}
@@ -380,7 +534,7 @@ function App() {
 				<Modal.Body>
 					<div className='row_modal'>
 						<div className='column_modal'>
-							<Table columns={columnsTranscripts} data={TranscriptData}></Table>
+							<TableTranscript columns={columnsTranscripts} data={TranscriptData}></TableTranscript>
 						</div>
 						<div className='column_modal'>
 							<h1>{transcriptName}</h1><br/>
@@ -394,7 +548,7 @@ function App() {
 					</Button>
 				</Modal.Footer>
 			</Modal>
-			<Table
+			<TableMasterList
 				columns={columns}
 				data={data}
 				modalClose={handleClose}
@@ -403,6 +557,13 @@ function App() {
 				selectKey={advancedKeySet}
 				selectName={setTranscriptName}
 			/>
+			</div>
+			<div className = 'div-counts'>
+			<Counts></Counts>
+			</div>
+		</div>
+			
+		
 		</>
 	);
 }

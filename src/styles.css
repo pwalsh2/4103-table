@@ -1,0 +1,34 @@
+
+
+.App {
+    font-family: sans-serif;
+    text-align: center;
+  }
+  
+  .countsCard {
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+  }
+  
+  .formDiv {
+    display: inline-block;
+  }
+  
+  .dropdownDiv {
+    display: inline-block;
+    margin-right: 20px;
+  }
+  
+  .inputValueForm {
+    display: inline-block;
+    margin-right: 20px;
+  }
+  
+  .submitValueForm {
+    display: inline-block;
+  }
+
+  .counts_tbody td {
+    background-color: white;
+    color: black;
+  }

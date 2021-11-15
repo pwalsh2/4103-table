@@ -37,6 +37,9 @@
 .styled-table tbody tr:nth-of-type(even) {
   background-color: #f3f3f3;
 }
+.styled-table tbody tr:nth-of-type(odd) {
+  background-color: #f3f3f3;
+}
 
 .styled-table tbody tr:last-of-type {
   border-bottom: 2px solid #009879;
@@ -62,4 +65,42 @@ input {
 
 .column_modal {
   padding: 1rem;
+}
+.styled-transcript{
+  width: 100%;
+
+}
+
+.styled-transcript-thead{
+ 
+    width: 100%;
+    height: 40px;
+}
+
+.styled-transcript-tbody{
+  height: 200px;
+  
+  width: 100%;
+  overflow: auto;
+}
+
+
+.transcript_head{
+ background-color: #f00000;
+
+
+}
+
+.transcript_cell{
+  
+}
+
+.div-table{
+  padding-right: 40px;
+  float:left;
+}
+
+.div-counts{
+  padding-left: 40px;
+  float:left;
 }
