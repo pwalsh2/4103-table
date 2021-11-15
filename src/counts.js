@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import {
   DropdownButton,
@@ -15,7 +15,7 @@ import axios from "axios";
 import "./styles.css";
 
 export default function Counts() {
-  const [value, setValue] = useState({ title: "Cohort", input: "" });
+  const [value, setValue] = useState({ title: "Cohort", input: "2021-01-01" });
   const [counts, setCounts] = useState({
     coop: 0,
     total: 0,
@@ -25,27 +25,33 @@ export default function Counts() {
     SEN: 0
   });
 
-  const submitValue = (e) => {
-    // Make API call and update setCounts based on selected parameter
-
+  useEffect(() => {
+    const regexArr = [/\d{4}-\d{2}-\d{2}$/, /\d{4}\/FA|WI|SM$/];
     let url = "";
+    let regIdx = 0;
+
     if (value.title.toLowerCase() === "cohort") {
       url = "http://127.0.0.1:8000/api/counts_start_date/" + value.input;
     } else {
       url = "http://127.0.0.1:8000/api/counts_semester/" + value.input;
+      regIdx = 1;
     }
 
-    axios.get(url).then((res) => {
-      setCounts({
-        coop: res.data.countCoop,
-        total: res.data.countTotal,
-        FIR: res.data.FIR,
-        SOP: res.data.SOP,
-        JUN: res.data.JUN,
-        SEN: res.data.SEN
+    // Only call API if the input matches regular expression based
+    // on parameter used
+    if (regexArr[regIdx].test(value.input)) {
+      axios.get(url).then((res) => {
+        setCounts({
+          coop: res.data.countCoop,
+          total: res.data.countTotal,
+          FIR: res.data.FIR,
+          SOP: res.data.SOP,
+          JUN: res.data.JUN,
+          SEN: res.data.SEN
+        });
       });
-    });
-  };
+    }
+  }, [value]);
 
   return (
     <div className="countsCard">
@@ -69,21 +75,11 @@ export default function Counts() {
                  
                   className="inputValueForm"
                   type="text"
-                  placeholder={value.title}
+                  placeholder={value.input}
                   onChange={(e) =>
                     setValue({ title: value.title, input: e.target.value })
                   }
                 />
-              </Col>
-              <Col>
-                <button
-                  
-                  className="submitValueForm"
-                  
-                  onClick={submitValue}
-                >
-                  Submit
-                </button>
               </Col>
             </Row>
           </Form>
