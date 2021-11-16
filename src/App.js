@@ -242,7 +242,7 @@ function TableMasterList({
 					{firstPageRows.map((row, i) => {
 						prepareRow(row);
 						return (
-							<tr onClick={() => enterAdvanced(row)} {...row.getRowProps()}>
+							<tr className = "List_Row" onClick={() => enterAdvanced(row)} {...row.getRowProps()}>
 								{row.cells.map((cell) => {
 									return (
 										<td className='table-td-cell' {...cell.getCellProps()}>
@@ -257,11 +257,7 @@ function TableMasterList({
 			</table>
 			<br />
 
-			<div>
-				<pre>
-					<code>{JSON.stringify(state.filters, null, 2)}</code>
-				</pre>
-			</div>
+			
 		</>
 	);
 }
@@ -370,11 +366,7 @@ function TableTranscript({
 			</Table>
 			<br />
 
-			<div>
-				<pre>
-					<code>{JSON.stringify(state.filters, null, 2)}</code>
-				</pre>
-			</div>
+			
 		</>
 	);
 }
@@ -537,8 +529,8 @@ function App() {
 							<TableTranscript columns={columnsTranscripts} data={TranscriptData}></TableTranscript>
 						</div>
 						<div className='column_modal'>
-							<h1>{transcriptName}</h1><br/>
-							<h2>{advancedKey}</h2>
+							<h1 style={{fontFamily: "sans-serif"}}>{transcriptName}</h1><br/>
+							<h2 style={{fontFamily: "sans-serif"}}>{advancedKey}</h2>
 						</div>
 					</div>
 				</Modal.Body>
