@@ -22,8 +22,10 @@ export default function App() {
   // Holds two lists of react-bootstrap dropdown items, one for
   // all cohorts being stored in the db and one for all semesters
   const [items, setItems] = useState({
-    cohorts: [],
-    semesters: []
+    cohortList: [],
+    semesterList: [],
+    cohortDropdowns: [],
+    semesterDropdowns: []
   });
   // State variable that represents the current parameter choice
   const [value, setValue] = useState({ title: "", input: "" });
@@ -40,12 +42,12 @@ export default function App() {
   // Effect that makes appropriate API call based on the chosen parameter
   // and populates the counts state variable for display to user
   useEffect(() => {
-    const regexArr = [/\d{4}-\d{2}-\d{2}$/, /\d{4}\/FA|WI|SM$/];
+    const regexArr = [/\d{4}-\d{4}$/, /\d{4}\/FA|WI|SM$/];
     let url = "";
     let regIdx = 0;
 
     if (value.title.toLowerCase() === "cohort") {
-      url = "http://127.0.0.1:8000/api/counts_start_date/" + value.input;
+      url = "http://127.0.0.1:8000/api/counts_cohort/" + value.input;
     } else {
       url = "http://127.0.0.1:8000/api/counts_semester/" + value.input;
       regIdx = 1;
@@ -87,8 +89,10 @@ export default function App() {
       }
 
       setItems({
-        cohorts: cohortItems,
-        semesters: semesterItems
+        cohortList: res.data.cohorts,
+        semesterList: res.data.semesters,
+        cohortDropdowns: cohortItems,
+        semesterDropdowns: semesterItems
       });
 
       setValue({ title: "Cohort", input: res.data.cohorts[0] });
@@ -106,11 +110,13 @@ export default function App() {
             title={value.title}
             variant="danger"
             onSelect={(e) => {
-              setValue({ title: e, input: value.input });
+              // setValue({ title: e, input: value.input });
               if (e.toLowerCase() === "cohort") {
-                setMenu(items.cohorts);
+                setMenu(items.cohortDropdowns);
+                setValue({ title: e, input: items.cohortList[0] });
               } else {
-                setMenu(items.semesters);
+                setMenu(items.semesterDropdowns);
+                setValue({ title: e, input: items.semesterList[0] });
               }
             }}
           >
